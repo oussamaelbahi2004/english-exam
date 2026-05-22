@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reported Speech Mastery Quiz</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%);
+            min-height: 100vh;
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        .slide-up {
+            animation: slideUp 0.4s ease-out forwards;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Custom button transitions */
+        .option-btn {
+            transition: all 0.2s ease;
+        }
+        
+        .option-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+
+        .correct-answer {
+            background-color: #def7ec !important; /* bg-green-100 */
+            border-color: #31c48d !important; /* border-green-500 */
+            color: #03543f !important; /* text-green-800 */
+        }
+
+        .wrong-answer {
+            background-color: #fde8e8 !important; /* bg-red-100 */
+            border-color: #f98080 !important; /* border-red-500 */
+            color: #9b1c1c !important; /* text-red-800 */
+        }
+        
+        .disabled-btn {
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+    </style>
+</head>
+<body class="text-gray-800 flex items-center justify-center p-4">
+
+    <div class="max-w-3xl w-full bg-white rounded-2xl shadow-xl overflow-hidden" id="app-container">
+        
+        <!-- Header Section -->
+        <div class="bg-indigo-600 text-white p-6 text-center">
+            <h1 class="text-3xl font-bold mb-2 flex items-center justify-center gap-2">
+                <i data-lucide="book-open-check"></i>
+                Reported Speech Quiz
+            </h1>
+            <p class="text-indigo-100">Test your English grammar skills!</p>
+        </div>
+
+        <!-- Progress and Score Bar -->
+        <div class="bg-indigo-50 px-6 py-3 border-b border-indigo-100 flex justify-between items-center hidden" id="status-bar">
+            <div class="flex items-center gap-2 text-indigo-800 font-semibold">
+                <i data-lucide="bar-chart-2" class="w-5 h-5"></i>
+                <span>Question: <span id="current-question-num">1</span>/60</span>
+            </div>
+            <div class="flex items-center gap-2 text-indigo-800 font-semibold">
+                <i data-lucide="award" class="w-5 h-5"></i>
+                <span>Score: <span id="score-display">0</span></span>
+            </div>
+        </div>
+
+        <!-- Content Area -->
+        <div class="p-6 md:p-8 min-h-[400px] flex flex-col relative" id="content-area">
+            
+            <!-- Start Screen -->
+            <div id="start-screen" class="flex flex-col items-center justify-center h-full text-center slide-up">
+                <div class="w-24 h-24 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center mb-6">
+                    <i data-lucide="brain-circuit" class="w-12 h-12"></i>
+                </div>
+                <h2 class="text-2xl font-bold mb-4">Ready to test your knowledge?</h2>
+                <p class="text-gray-600 mb-8 max-w-md">
+                    You will face 60 multiple-choice questions (3 Exams). For each question, a random player (Tarik, Abd Khani, or Oussama) will be chosen to answer! Good luck!
+                </p>
+                <button id="start-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-8 rounded-lg shadow-lg transition-colors flex items-center gap-2 text-lg">
+                    Start Quiz <i data-lucide="play" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <!-- Quiz Screen -->
+            <div id="quiz-screen" class="hidden flex-col h-full fade-in">
+                
+                <!-- Progress bar visual -->
+                <div class="w-full bg-gray-200 rounded-full h-2 mb-6">
+                    <div id="progress-bar-fill" class="bg-indigo-600 h-2 rounded-full transition-all duration-300" style="width: 5%"></div>
+                </div>
+
+                <div class="flex-grow">
+                    <!-- NEW: Player Turn Display -->
+                    <div id="player-turn-container" class="mb-4 text-center">
+                        <span id="player-turn" class="inline-flex items-center gap-2 bg-yellow-100 text-yellow-800 px-4 py-1 rounded-full font-bold shadow-sm border border-yellow-400">
+                            <!-- Name goes here -->
+                        </span>
+                    </div>
+
+                    <h3 id="question-text" class="text-xl md:text-2xl font-semibold mb-6 text-gray-800">
+                        <!-- Question goes here -->
+                    </h3>
+                    
+                    <div id="options-container" class="space-y-3">
+                        <!-- Options will be injected here by JS -->
+                    </div>
+                </div>
+
+                <!-- Feedback Section (Hidden initially) -->
+                <div id="feedback-section" class="mt-8 hidden p-4 rounded-lg flex items-start gap-3">
+                    <div id="feedback-icon" class="mt-0.5"></div>
+                    <div>
+                        <h4 id="feedback-title" class="font-bold text-lg mb-1"></h4>
+                        <p id="feedback-text" class="text-sm"></p>
+                    </div>
+                </div>
+
+                <div class="mt-6 flex justify-end">
+                    <button id="next-btn" class="hidden bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-6 rounded-lg transition-colors flex items-center gap-2">
+                        Next Question <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                    </button>
+                    <button id="finish-btn" class="hidden bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-lg transition-colors flex items-center gap-2">
+                        See Results <i data-lucide="flag" class="w-4 h-4"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Results Screen -->
+            <div id="results-screen" class="hidden flex-col items-center justify-center h-full text-center fade-in">
+                <div id="result-icon-container" class="w-24 h-24 rounded-full flex items-center justify-center mb-6">
+                    <!-- Icon injected by JS based on score -->
+                </div>
+                <h2 class="text-3xl font-bold mb-2" id="result-title">Quiz Complete!</h2>
+                <p class="text-gray-600 mb-6 text-lg" id="result-message"></p>
+                
+                <div class="bg-gray-50 rounded-xl p-6 mb-8 w-full max-w-sm border border-gray-200">
+                    <div class="flex justify-between items-center mb-4">
+                        <span class="text-gray-600 font-medium">Final Score:</span>
+                        <span class="text-2xl font-bold text-indigo-600" id="final-score">0 / 20</span>
+                    </div>
+                    <div class="w-full bg-gray-200 rounded-full h-3">
+                        <div id="final-progress-bar" class="bg-indigo-600 h-3 rounded-full" style="width: 0%"></div>
+                    </div>
+                    <p class="text-sm text-gray-500 mt-2 text-right" id="percentage-text">0%</p>
+                </div>
+
+                <button id="restart-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-8 rounded-lg shadow transition-colors flex items-center gap-2 text-lg">
+                    <i data-lucide="rotate-ccw" class="w-5 h-5"></i> Play Again
+                </button>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // Initialize Lucide icons
+        lucide.createIcons();
+
+        const players = ["Tarik", "Abd Khani", "Oussama"];
+
+        // The Quiz Data - 60 Questions from 3 Exams
+        const quizData = [
+            // EXAM 1
+            { question: "A piece of information or a story that describes an event or a situation is a:", options: ["Media", "Report", "Source"], correctAnswerIndex: 1, explanation: "A 'Report' describes an event." },
+            { question: "The title of a news story, written in large letters to grab attention, is a:", options: ["Headline", "Event", "Interview"], correctAnswerIndex: 0, explanation: "A 'Headline' is the title of a news story." },
+            { question: "A meeting where a journalist asks someone questions to get information is an:", options: ["Audience", "Interview", "Information"], correctAnswerIndex: 1, explanation: "An 'Interview' is a question/answer meeting." },
+            { question: "A person, book, or document that gives information to a journalist is a:", options: ["Reporter", "Source", "Media"], correctAnswerIndex: 1, explanation: "A 'Source' provides information." },
+            { question: "News that happens between different countries is called _____ news.", options: ["Local", "National", "International"], correctAnswerIndex: 2, explanation: "Between countries is 'International'." },
+            { question: "The group of people who watch, read, or listen to the news is the:", options: ["Audience", "Government", "Source"], correctAnswerIndex: 0, explanation: "The 'Audience' consumes the news." },
+            { question: "The different ways we get information, such as TV, newspapers, radio, and the internet:", options: ["Headlines", "Media", "Reports"], correctAnswerIndex: 1, explanation: "This is the definition of 'Media'." },
+            { question: "Something that happens, especially something important or interesting, is an:", options: ["Event", "Information", "Interview"], correctAnswerIndex: 0, explanation: "An 'Event' is something that happens." },
+            { question: "A person whose job is to find information and write stories for the public is a:", options: ["Source", "Journalist", "Audience"], correctAnswerIndex: 1, explanation: "A 'Journalist' finds and writes stories." },
+            { question: "Facts or details about a person, thing, or event are called:", options: ["Information", "Media", "Report"], correctAnswerIndex: 0, explanation: "Facts/details are 'Information'." },
+            { question: "The journalist said: \"The school is closed.\"\nReported: The journalist said that the school _____ closed.", options: ["was", "is", "were"], correctAnswerIndex: 0, explanation: "Present 'is' changes to past 'was'." },
+            { question: "She said: \"You are late.\"\nReported: She said that they _____ late.", options: ["was", "are", "were"], correctAnswerIndex: 2, explanation: "'are' changes to 'were' (plural for they)." },
+            { question: "He said: \"I have a car.\"\nReported: He said he _____ a car.", options: ["has", "had", "have"], correctAnswerIndex: 1, explanation: "'have' changes to 'had'." },
+            { question: "She said: \"I will help.\"\nReported: She said she _____ help.", options: ["will", "would", "could"], correctAnswerIndex: 1, explanation: "'will' changes to 'would'." },
+            { question: "He said: \"I can swim.\"\nReported: He said he _____ swim.", options: ["can", "could", "would"], correctAnswerIndex: 1, explanation: "'can' changes to 'could'." },
+            { question: "The teacher said: \"The event is important.\"\nReported: The teacher said that the event _____ important.", options: ["is", "was", "were"], correctAnswerIndex: 1, explanation: "'is' changes to 'was'." },
+            { question: "They said: \"We are ready.\"\nReported: They said that they _____ ready.", options: ["are", "was", "were"], correctAnswerIndex: 2, explanation: "'are' changes to 'were'." },
+            { question: "She said: \"I have new information.\"\nReported: She said that she _____ new information.", options: ["has", "had", "have"], correctAnswerIndex: 1, explanation: "'have' changes to 'had'." },
+            { question: "He said: \"I am tired.\"\nReported: He said he _____ tired.", options: ["am", "is", "was"], correctAnswerIndex: 2, explanation: "'am' changes to 'was'." },
+            { question: "The student said: \"I can finish the exercise.\"\nReported: The student said he _____ finish the exercise.", options: ["can", "could", "would"], correctAnswerIndex: 1, explanation: "'can' changes to 'could'." },
+
+            // EXAM 2
+            { question: "An official rule made by the government for everyone in a country is a:", options: ["Law", "Rule", "Behavior"], correctAnswerIndex: 0, explanation: "A 'Law' is an official government rule." },
+            { question: "Money you must pay as a punishment for breaking a rule is a:", options: ["Prohibition", "Fine", "Responsibility"], correctAnswerIndex: 1, explanation: "A 'Fine' is a monetary penalty." },
+            { question: "Being allowed to do something is called:", options: ["Obligation", "Authority", "Permission"], correctAnswerIndex: 2, explanation: "'Permission' means you are allowed." },
+            { question: "A rule that says you must NOT do something is a:", options: ["Prohibition", "Permission", "Responsibility"], correctAnswerIndex: 0, explanation: "'Prohibition' means forbidden." },
+            { question: "The power or right to give orders and make decisions is:", options: ["Government", "Authority", "Respect"], correctAnswerIndex: 1, explanation: "This is the definition of 'Authority'." },
+            { question: "To do what a law, rule, or person tells you to do is to:", options: ["Obey", "Respect", "Behave"], correctAnswerIndex: 0, explanation: "To 'Obey' is to follow rules/orders." },
+            { question: "A job or duty that you are expected to take care of is your:", options: ["Law", "Responsibility", "Fine"], correctAnswerIndex: 1, explanation: "A duty is a 'Responsibility'." },
+            { question: "Something you must do because it is your duty is an:", options: ["Obligation", "Permission", "Authority"], correctAnswerIndex: 0, explanation: "A duty is an 'Obligation'." },
+            { question: "To show care for the feelings, rights, or traditions of others is to show:", options: ["Behavior", "Respect", "Government"], correctAnswerIndex: 1, explanation: "Showing care is 'Respect'." },
+            { question: "The group of people who lead and control a country is the:", options: ["Authority", "Source", "Government"], correctAnswerIndex: 2, explanation: "The 'Government' leads the country." },
+            { question: "Students _____ cheat during the exam. (Prohibition)", options: ["must", "have to", "mustn't"], correctAnswerIndex: 2, explanation: "'mustn't' indicates prohibition." },
+            { question: "It is an official university rule. Students _____ show their student IDs.", options: ["must", "have to", "mustn't"], correctAnswerIndex: 1, explanation: "'have to' is used for external rules/laws." },
+            { question: "I personally feel it is necessary. I _____ help my friend.", options: ["must", "have to", "mustn't"], correctAnswerIndex: 0, explanation: "'must' is used for strong personal obligation." },
+            { question: "You _____ park your car here; it is an emergency exit.", options: ["must", "have to", "mustn't"], correctAnswerIndex: 2, explanation: "Prohibition -> 'mustn't'." },
+            { question: "If you want to travel abroad, you _____ have a passport.", options: ["must", "have to", "mustn't"], correctAnswerIndex: 1, explanation: "External requirement/law -> 'have to'." },
+            { question: "I _____ finish this project tonight because I promised my boss. (Strong personal obligation)", options: ["must", "have to", "mustn't"], correctAnswerIndex: 0, explanation: "Strong personal feeling -> 'must'." },
+            { question: "The law says all drivers _____ stop at a red light.", options: ["must", "have to", "mustn't"], correctAnswerIndex: 1, explanation: "Laws -> 'have to'." },
+            { question: "You _____ smoke inside the hospital.", options: ["must", "have to", "mustn't"], correctAnswerIndex: 2, explanation: "Prohibition -> 'mustn't'." },
+            { question: "Students _____ arrive on time for their S2 classes. (External rule)", options: ["must", "have to", "mustn't"], correctAnswerIndex: 1, explanation: "External rules -> 'have to'." },
+            { question: "I _____ remember to call Fatiha today, it's very important to me.", options: ["must", "have to", "mustn't"], correctAnswerIndex: 0, explanation: "Personal importance -> 'must'." },
+
+            // EXAM 3
+            { question: "News about your whole country is called _____ news.", options: ["Local", "National", "International"], correctAnswerIndex: 1, explanation: "Whole country is 'National'." },
+            { question: "A guide for what you must do in a specific place (like school) is a:", options: ["Law", "Rule", "Fine"], correctAnswerIndex: 1, explanation: "A 'Rule' applies to specific places." },
+            { question: "The way a person acts or conducts themselves is their:", options: ["Behavior", "Respect", "Responsibility"], correctAnswerIndex: 0, explanation: "Acting/conducting oneself is 'Behavior'." },
+            { question: "A meeting where a journalist asks questions is called an:", options: ["Event", "Interview", "Information"], correctAnswerIndex: 1, explanation: "This is an 'Interview'." },
+            { question: "The group of people who watch, read, or listen to the news:", options: ["Government", "Audience", "Media"], correctAnswerIndex: 1, explanation: "This is the 'Audience'." },
+            { question: "Money paid as a punishment:", options: ["Source", "Fine", "Obligation"], correctAnswerIndex: 1, explanation: "A 'Fine' is a monetary penalty." },
+            { question: "A person giving information to a journalist:", options: ["Source", "Media", "Authority"], correctAnswerIndex: 0, explanation: "This is a 'Source'." },
+            { question: "Being allowed to do something:", options: ["Permission", "Prohibition", "Respect"], correctAnswerIndex: 0, explanation: "This is 'Permission'." },
+            { question: "The title of a news story:", options: ["Report", "Headline", "Media"], correctAnswerIndex: 1, explanation: "This is a 'Headline'." },
+            { question: "To do what a law tells you to do:", options: ["Obey", "Behave", "Respect"], correctAnswerIndex: 0, explanation: "To follow the law is to 'Obey'." },
+            { question: "Direct: \"I am late.\"\nReported: He said he _____ late.", options: ["is", "was", "were"], correctAnswerIndex: 1, explanation: "'am' changes to 'was'." },
+            { question: "Direct: \"We will win.\"\nReported: They said they _____ win.", options: ["will", "would", "could"], correctAnswerIndex: 1, explanation: "'will' changes to 'would'." },
+            { question: "You _____ use your phone during the oral exam. (It is forbidden)", options: ["must", "have to", "mustn't"], correctAnswerIndex: 2, explanation: "Forbidden -> 'mustn't'." },
+            { question: "Direct: \"I have a problem.\"\nReported: She said she _____ a problem.", options: ["has", "had", "have"], correctAnswerIndex: 1, explanation: "'have' changes to 'had'." },
+            { question: "We _____ wear safety glasses in the laboratory. (External university rule)", options: ["must", "have to", "mustn't"], correctAnswerIndex: 1, explanation: "External rules -> 'have to'." },
+            { question: "Direct: \"They are happy.\"\nReported: He said they _____ happy.", options: ["are", "was", "were"], correctAnswerIndex: 2, explanation: "'are' changes to 'were'." },
+            { question: "Direct: \"I can run fast.\"\nReported: He said he _____ run fast.", options: ["can", "could", "would"], correctAnswerIndex: 1, explanation: "'can' changes to 'could'." },
+            { question: "I _____ start waking up earlier. (Personal decision/strong feeling)", options: ["must", "have to", "mustn't"], correctAnswerIndex: 0, explanation: "Strong personal feeling -> 'must'." },
+            { question: "You _____ forget your ID card tomorrow.", options: ["have to", "must", "mustn't"], correctAnswerIndex: 2, explanation: "Prohibition/strong advice not to do something -> 'mustn't'." },
+            { question: "Direct: \"The interview is today.\"\nReported: He said the interview _____ that day.", options: ["is", "was", "were"], correctAnswerIndex: 1, explanation: "'is' changes to 'was'." }
+        ];
+
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let hasAnsweredCurrent = false;
+
+        // DOM Elements
+        const startScreen = document.getElementById('start-screen');
+        const quizScreen = document.getElementById('quiz-screen');
+        const resultsScreen = document.getElementById('results-screen');
+        const statusBar = document.getElementById('status-bar');
+        
+        const questionText = document.getElementById('question-text');
+        const optionsContainer = document.getElementById('options-container');
+        const currentQuestionNum = document.getElementById('current-question-num');
+        const scoreDisplay = document.getElementById('score-display');
+        const progressBarFill = document.getElementById('progress-bar-fill');
+        
+        const feedbackSection = document.getElementById('feedback-section');
+        const feedbackIcon = document.getElementById('feedback-icon');
+        const feedbackTitle = document.getElementById('feedback-title');
+        const feedbackText = document.getElementById('feedback-text');
+        
+        const nextBtn = document.getElementById('next-btn');
+        const finishBtn = document.getElementById('finish-btn');
+        const startBtn = document.getElementById('start-btn');
+        const restartBtn = document.getElementById('restart-btn');
+
+        startBtn.addEventListener('click', startQuiz);
+        nextBtn.addEventListener('click', loadNextQuestion);
+        finishBtn.addEventListener('click', showResults);
+        restartBtn.addEventListener('click', resetQuiz);
+
+        function startQuiz() {
+            startScreen.classList.add('hidden');
+            quizScreen.classList.remove('hidden');
+            quizScreen.classList.add('flex');
+            statusBar.classList.remove('hidden');
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            // Reset states
+            hasAnsweredCurrent = false;
+            feedbackSection.classList.add('hidden');
+            nextBtn.classList.add('hidden');
+            finishBtn.classList.add('hidden');
+            
+            const currentQ = quizData[currentQuestionIndex];
+            
+            // Randomly pick a player
+            const randomPlayer = players[Math.floor(Math.random() * players.length)];
+            const playerTurnEl = document.getElementById('player-turn');
+            playerTurnEl.innerHTML = `<i data-lucide="user" class="w-5 h-5"></i> Nouba dyal: ${randomPlayer}`;
+            lucide.createIcons();
+            
+            // Update UI
+            currentQuestionNum.textContent = currentQuestionIndex + 1;
+            scoreDisplay.textContent = score;
+            questionText.innerHTML = `${currentQuestionIndex + 1}. ${currentQ.question.replace(/\n/g, '<br>')}`;
+            
+            // Update progress bar
+            const progressPercentage = ((currentQuestionIndex) / quizData.length) * 100;
+            progressBarFill.style.width = `${progressPercentage}%`;
+
+            // Clear old options and render new ones
+            optionsContainer.innerHTML = '';
+            
+            const optionLetters = ['a', 'b', 'c', 'd'];
+            
+            currentQ.options.forEach((option, index) => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn w-full text-left p-4 rounded-lg border-2 border-gray-200 hover:border-indigo-400 hover:bg-indigo-50 focus:outline-none flex items-start gap-3 bg-white';
+                
+                btn.innerHTML = `
+                    <span class="font-bold text-indigo-600 bg-indigo-100 rounded px-2 py-0.5 shrink-0">${optionLetters[index]}</span>
+                    <span class="text-gray-700 font-medium">${option}</span>
+                `;
+                
+                btn.addEventListener('click', () => selectAnswer(index, btn));
+                optionsContainer.appendChild(btn);
+            });
+            
+            // Trigger animation
+            optionsContainer.classList.remove('slide-up');
+            void optionsContainer.offsetWidth; // trigger reflow
+            optionsContainer.classList.add('slide-up');
+        }
+
+        function selectAnswer(selectedIndex, selectedBtn) {
+            if (hasAnsweredCurrent) return; // Prevent multiple clicks
+            
+            hasAnsweredCurrent = true;
+            const currentQ = quizData[currentQuestionIndex];
+            const isCorrect = selectedIndex === currentQ.correctAnswerIndex;
+            
+            const allBtns = optionsContainer.querySelectorAll('.option-btn');
+            
+            // Disable all buttons
+            allBtns.forEach((btn, idx) => {
+                btn.classList.add('disabled-btn');
+                btn.classList.remove('hover:border-indigo-400', 'hover:bg-indigo-50');
+                
+                // Highlight correct answer
+                if (idx === currentQ.correctAnswerIndex) {
+                    btn.classList.add('correct-answer');
+                    // Add check icon
+                    btn.innerHTML += `<i data-lucide="check-circle-2" class="ml-auto text-green-600 w-5 h-5 shrink-0"></i>`;
+                }
+            });
+
+            // Handle logic based on correct/wrong
+            if (isCorrect) {
+                score++;
+                scoreDisplay.textContent = score;
+                showFeedback(true, currentQ.explanation);
+            } else {
+                // Highlight the wrongly selected button
+                selectedBtn.classList.add('wrong-answer');
+                selectedBtn.innerHTML += `<i data-lucide="x-circle" class="ml-auto text-red-600 w-5 h-5 shrink-0"></i>`;
+                showFeedback(false, currentQ.explanation);
+            }
+
+            // Refresh icons added to buttons
+            lucide.createIcons();
+
+            // Show next or finish button
+            if (currentQuestionIndex < quizData.length - 1) {
+                nextBtn.classList.remove('hidden');
+            } else {
+                finishBtn.classList.remove('hidden');
+                progressBarFill.style.width = '100%';
+            }
+        }
+
+        function showFeedback(isCorrect, explanation) {
+            feedbackSection.classList.remove('hidden', 'bg-green-100', 'bg-red-100', 'text-green-800', 'text-red-800');
+            
+            if (isCorrect) {
+                feedbackSection.classList.add('bg-green-100', 'text-green-800');
+                feedbackIcon.innerHTML = `<i data-lucide="check-circle" class="w-6 h-6 text-green-600"></i>`;
+                feedbackTitle.textContent = "Correct! Mzyan!";
+            } else {
+                feedbackSection.classList.add('bg-red-100', 'text-red-800');
+                feedbackIcon.innerHTML = `<i data-lucide="x-octagon" class="w-6 h-6 text-red-600"></i>`;
+                feedbackTitle.textContent = "Incorrect";
+            }
+            
+            feedbackText.textContent = explanation;
+            lucide.createIcons();
+        }
+
+        function loadNextQuestion() {
+            currentQuestionIndex++;
+            loadQuestion();
+        }
+
+        function showResults() {
+            quizScreen.classList.add('hidden');
+            quizScreen.classList.remove('flex');
+            statusBar.classList.add('hidden');
+            
+            resultsScreen.classList.remove('hidden');
+            resultsScreen.classList.add('flex');
+
+            const percentage = Math.round((score / quizData.length) * 100);
+            
+            document.getElementById('final-score').textContent = `${score} / ${quizData.length}`;
+            document.getElementById('percentage-text').textContent = `${percentage}% Accuracy`;
+            
+            // Animate progress bar
+            setTimeout(() => {
+                document.getElementById('final-progress-bar').style.width = `${percentage}%`;
+            }, 100);
+
+            const resultTitle = document.getElementById('result-title');
+            const resultMessage = document.getElementById('result-message');
+            const iconContainer = document.getElementById('result-icon-container');
+
+            if (percentage >= 80) {
+                iconContainer.className = "w-24 h-24 rounded-full flex items-center justify-center mb-6 bg-green-100 text-green-600";
+                iconContainer.innerHTML = `<i data-lucide="trophy" class="w-12 h-12"></i>`;
+                resultTitle.textContent = "Excellent Work! Tbrakellah 3lik!";
+                resultMessage.textContent = "You have a very strong grasp of Reported Speech rules.";
+            } else if (percentage >= 50) {
+                iconContainer.className = "w-24 h-24 rounded-full flex items-center justify-center mb-6 bg-yellow-100 text-yellow-600";
+                iconContainer.innerHTML = `<i data-lucide="star" class="w-12 h-12"></i>`;
+                resultTitle.textContent = "Good Effort! Not bad!";
+                resultMessage.textContent = "You know the basics, but reviewing the tense changes will help you master it.";
+            } else {
+                iconContainer.className = "w-24 h-24 rounded-full flex items-center justify-center mb-6 bg-red-100 text-red-600";
+                iconContainer.innerHTML = `<i data-lucide="book-open" class="w-12 h-12"></i>`;
+                resultTitle.textContent = "Needs Practice";
+                resultMessage.textContent = "Don't worry! Reported speech can be tricky. Try reviewing the rules for pronouns and tenses and play again.";
+            }
+            
+            lucide.createIcons();
+        }
+
+        function resetQuiz() {
+            currentQuestionIndex = 0;
+            score = 0;
+            document.getElementById('final-progress-bar').style.width = '0%';
+            
+            resultsScreen.classList.add('hidden');
+            resultsScreen.classList.remove('flex');
+            
+            startQuiz();
+        }
+
+    </script>
+</body>
+</html>
